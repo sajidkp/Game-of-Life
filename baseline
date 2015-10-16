@@ -1,0 +1,279 @@
+/*GAME OF LIFE MINIMALISTIC IMPLEMENTATION*/
+
+#include    <stdio.h>
+#include    <stdlib.h>
+
+#define MAX_SIZE 6
+
+void clearBuff()
+{
+    while(getchar() != '\n') 
+    {
+        ;
+    }
+}
+
+void    setArray(int, int **);
+void    initArray(int size, int array[][size]);
+int **  allocateArray(int, int);
+int     calculateEndResult(int size ,int, int**);
+void    displayArray(int size, int**);
+int     checkToLive(int,int,int,int, int **array);
+
+int main()
+{
+    int     max_limit=0, 
+            **array,
+            time_unit = 0,
+            i,j;
+
+    printf("\nEnter the limit for the game :");
+    scanf("%d", &max_limit);
+    if (max_limit > MAX_SIZE)
+    {
+        printf("\nThe given value exceeds maximum permitted size (%d). Proceeding with %d", MAX_SIZE, MAX_SIZE);
+        max_limit = MAX_SIZE;
+    }
+    
+    //Memory Allocation
+    array = allocateArray(max_limit, max_limit);
+    
+    //Set the matrix
+    setArray(max_limit,array);
+    displayArray(max_limit, array);
+    printf("\nHow many time units to do you want to move ?? : ");
+    scanf("%d", &time_unit);
+    time_unit = calculateEndResult(max_limit, time_unit, array);
+    printf("\nAfter the end of %d generations, the matrix is as follows:\n", time_unit);
+    displayArray(max_limit, array);
+    
+    //Free Memory Allocations
+    for(i =0; i <max_limit; i++)
+        free(array[i]);
+    free(array);
+    return 0;
+}
+
+int** allocateArray(int row, int column)
+{
+    int **array, i, j;
+
+    //Memory Allocation for the matrix
+    array = (int**) malloc(sizeof(int*) * row);
+    for ( i= 0; i < column; i++)
+    {
+        array[i] = (int*) malloc(sizeof(int) * column);
+        for(j = 0; j<column; j++)
+        {
+            array[i][j] = 0;
+        }
+    }
+    return array;
+}
+
+void setArray(int size, int **array)
+{
+    int row_set = 0,
+        col_set = 0;
+    char ch = 'n';
+    printf("\nInitialising the matrix with Live Cells");
+    while(1)
+    {
+        printf("\nEnter the row and column to add your live cells:");
+        printf("\nEnter Row:"); 
+        scanf("%d",&row_set);
+        printf("\nEnter column:"); 
+        scanf("%d",&col_set);
+        if (row_set >size || col_set >size || row_set <=0 || col_set <=0)
+        {
+            printf("\nInvalid row/column position entered. Enter value between 0 and %d", size);
+        }
+        else
+        {
+            array[row_set-1][col_set-1] = 1;
+        }
+        clearBuff();
+        printf("\nContinue Adding positions for live cells ?? y/n :");
+        scanf("%c",&ch);
+        if(ch =='n')
+            break;
+        else if (ch !='y')
+        {
+            printf("\nInvalid choice. Considering as No");
+            break;
+        }
+        
+    }
+
+    return;
+}
+
+void initArray(int size, int array[][size])
+{
+    int i, j;
+    for(i =0; i < size; i ++)
+    {
+        for(j=0; j< size; j++)
+            array[i][j] = 0;
+    }
+}
+
+int calculateEndResult(int size, int generation, int **array) 
+{
+    int i, j, temp, index, deathcount=0;
+    int temp_arr[size][size];
+    initArray(size, temp_arr);
+    for(index = 0; index < generation; index++)
+    {
+        deathcount = 0;
+     printf("\nGeneration %d\n",index+1);
+    for (i =0; i < size; i++)
+    {
+        printf("\n");
+        for(j = 0; j < size; j++)
+        {   
+            temp = array[i][j];
+            if ( 1 ==  checkToLive(i,j,size,temp,array))
+            {
+                temp_arr[i][j] = 1;
+            }
+            else
+                temp_arr[i][j] = 0;
+            printf("\t%d", temp_arr[i][j]);
+           
+        }
+                
+     }
+
+     for (i = 0 ; i < size; i ++)
+     {
+         for(j=0;j<size; j++)
+         {
+             if (temp_arr[i][j] == 0)
+                 deathcount ++;
+             array[i][j] = temp_arr[i][j];
+         }
+     }
+     if (deathcount == size *size)
+         return (index+1);
+    }
+
+    return index;
+
+}
+
+void displayArray(int size , int **array)
+{
+    int i, j;
+    for(i = 0; i < size; i++)
+    {
+        printf("\n");
+
+        for(j=0; j < size; j++)
+        {
+            printf("\t%d", array[i][j]);
+        }
+    }
+}
+
+int checkToLive(int row, int column, int size, int alive, int **array)
+{
+    int live_count = 0;
+    int r_1, c_1;   
+    if (((row -1 ) == -1) )
+    {
+        if ((column-1) == -1) 
+        {
+         if (array[row][column+1] == 1)
+             live_count++;
+         if (array[row+1][column+1] == 1)
+             live_count++;
+         if (array[row+1][column] == 1)
+             live_count++;
+        }
+        else if(column + 1 == size) 
+        {
+            if (array[row][column-1] == 1)
+                live_count++;
+            if (array[row+1][column-1] == 1)
+                live_count++;
+            if (array[row+1][column] == 1)
+                 live_count++;
+        }
+        else
+        {
+         if (array[row][column+1] == 1)
+             live_count++;
+         if (array[row+1][column+1] == 1)
+             live_count++;
+         if (array[row+1][column] == 1)
+             live_count++;
+         if (array[row][column-1] == 1)
+            live_count++;
+         if (array[row+1][column-1] == 1)
+            live_count++;
+        }
+    }
+    else if (((row + 1 ) == size) )
+    {
+        if ((column-1) == -1) 
+        {
+         if (array[row][column+1] == 1)
+             live_count++;
+         if (array[row-1][column+1] == 1)
+             live_count++;
+         if (array[row-1][column] == 1)
+             live_count++;
+        }
+        else if(column + 1 == size) 
+        {
+            if (array[row][column-1] == 1)
+                live_count++;
+            if (array[row-1][column-1] == 1)
+                live_count++;
+            if (array[row-1][column] == 1)
+                 live_count++;
+        }
+        else
+        {
+         if (array[row][column+1] == 1)
+             live_count++;
+         if (array[row-1][column+1] == 1)
+             live_count++;
+         if (array[row-1][column] == 1)
+             live_count++;
+         if (array[row][column-1] == 1)
+            live_count++;
+         if (array[row-1][column-1] == 1)
+            live_count++;
+        }
+    }
+    else
+    {
+         if (array[row][column+1] == 1)
+             live_count++;
+         if (array[row-1][column+1] == 1)
+             live_count++;
+         if (array[row+1][column+1] == 1)
+             live_count++;
+         if (array[row-1][column] == 1)
+             live_count++;
+         if (array[row+1][column] == 1)
+             live_count++;
+         if (array[row][column-1] == 1)
+            live_count++;
+         if (array[row+1][column-1] == 1)
+            live_count++;
+         if (array[row-1][column-1] == 1)
+            live_count++;
+     }
+    
+     if ( live_count == 2 || live_count ==3)
+     {
+         if(alive == 0 && live_count == 2)
+                 return 0;
+         return 1;
+     }
+     else
+         return 0;
+}
